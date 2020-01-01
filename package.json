@@ -1,0 +1,25 @@
+{
+  "name": "shapesgame3",
+  "version": "1.0.0",
+  "description": "An online multiplayer game",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "keywords": [
+    "game",
+    "multiplayer",
+    "shapes",
+    "p5js",
+    "socketio"
+  ],
+  "author": "Leo G",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "g": "^2.0.1",
+    "nodemon": "^2.0.2",
+    "socketio": "^1.0.0"
+  }
+}
