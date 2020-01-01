@@ -170,7 +170,7 @@ class Spawner extends Square {
     constructor(x, y, w) {
         super(x, y, w, Math.random() * Math.PI * 2);
         this.lastSpawn = Date.now(); //It will wait a second before spawning
-        this.spawnEvery = 7000;
+        this.spawnEvery = (Math.random() * 3000) + 5000;
         this.amtShot = 0;
         this.rotSpeed = 0.001 * (Math.random() < 0.5 ? 1 : -1); //Rotates in a random dir
     }
@@ -179,6 +179,7 @@ class Spawner extends Square {
         this.pos.set(newPos);
         this.amtShot = 0;
         this.lastSpawn = Date.now();
+        this.spawnEvery = (Math.random() * 3000) + 5000;
         this.rotSpeed = 0.001 * (Math.random() < 0.5 ? 1 : -1); //Rotates in a random dir
         this.w = 20 + (Math.random() * 20);
     }
