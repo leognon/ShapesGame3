@@ -17,6 +17,7 @@ const HEIGHT = 3000;
 const baseSize = 17;
 const nutritionPerShot = 6;
 const spawnerAmmo = 15;
+const canShootEvery = 300;
 
 class Vector {
     constructor(x = 0, y = 0) {
@@ -280,8 +281,14 @@ class Player extends Circle {
         this.layerWidth = 5;
         this.maxLayers = Math.floor(((Math.min(WIDTH, HEIGHT) * 0.5) - baseSize) / this.layerWidth); //The maximum amount of layers being bigger than the arena
 
+        this.lastShot = 0;
+
         this.speed = s;
         this.vel = new Vector(0, 0);
+    }
+
+    canShoot() {
+        return (this.lastShot + canShootEvery) < Date.now();
     }
 
     setData(d) {
@@ -419,12 +426,14 @@ class Game {
 
     shoot(playerId) {
         const player = this.players[playerId];
-        if (player.nutrition >= 12) {
-            const moverVector = player.vel.copy().setMag(player.r * 1.5 + 5); //The * 1.5 is because that includes the w/2 of the mover
+        if (player.nutrition >= 12 && player.canShoot()) {
+            const moverW = Math.pow(player.r, 0.8);
+            const moverVector = player.vel.copy().setMag(player.r + (moverW * 0.5) + 5); //The * 1.5 is because that includes the w/2 of the mover
             const moverPos = player.pos.copy().add(moverVector);
 
-            this.movers.push(new Mover(moverPos.x, moverPos.y, Math.pow(player.r, 0.8), player.speed * 1.7, player.vel.heading(), 30));
+            this.movers.push(new Mover(moverPos.x, moverPos.y, moverW, player.speed * 1.7, player.vel.heading(), 50));
             player.eat(-nutritionPerShot);
+            player.lastShot = Date.now();
         }
     }
 
@@ -580,7 +589,9 @@ gameLoop();
 let stdin = process.openStdin();
 stdin.addListener("data", s => {
     let str = s.toString().trim();
-    if (str.slice(0, 4) == "log ") {
+    if (str.slice(0, 6) == "player") {
+        eval("game.players[Object.keys(game.players)[0]]" + str.slice(6));
+    } else if (str.slice(0, 4) == "log ") {
         try {
             eval("console.log(" + str.slice(4) + ");");
         } catch (e) {
