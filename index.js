@@ -167,6 +167,82 @@ class Square {
     }
 }
 
+class Rectangle {
+    constructor(x, y, w, h) {
+        this.pos = new Vector(x, y);
+        this.w = w;
+        this.h = h;
+    }
+
+    contains(point) {
+        return (point.x > this.pos.x && point.x < this.pos.x + this.w && point.y > this.pos.y && point.y < this.pos.y + this.h);
+    }
+}
+
+class GridRect extends Rectangle {
+    constructor(x, y, w, h) {
+        super(x, y, w, h);
+        this.contains = [];
+    }
+
+    add(obj) {
+        this.contains.push(obj);
+    }
+
+    remove(obj) {
+        this.contains.splice(this.contains.indexOf(obj), 1);
+    }
+}
+
+class Grid {
+    constructor(x, y, w, h, amtW, amtH) {
+        this.rect = new Rectangle(x, y, w, h);
+
+        this.rectW = WIDTH / amtW;
+        this.rectH = HEIGHT / amtH;
+        this.rects = [];
+
+        for (let x = this.rect.pos.x; x < this.rect.w; x += this.rectW) {
+            this.rects.push([]);
+            for (let y = this.rect.pos.y; y < this.rect.h; y += this.rectH) {
+                this.rects[x / this.rectW].push(new GridRect(x, y, this.rectW, this.rectH));
+            }
+        }
+    }
+
+    getWithin(x, y, w, h) {
+        let objs = [];
+        let adjBoundary = new Rectangle(
+            Math.floor(x / this.rectW) * this.rectW,
+            Math.floor(y / this.rectH) * this.rectH, //A rectangle that snapped onto the closest grid lines
+            Math.ceil(((x + w) / this.rectW)) * this.rectW - x,
+            Math.ceil(((y + h) / this.rectH)) * this.rectH - y);
+
+        for (let x = adjBoundary.pos.x; x <= adjBoundary.pos.x + adjBoundary.w; x += this.rectW) {
+            for (let y = adjBoundary.pos.y; y <= adjBoundary.pos.y + adjBoundary.h; y += this.rectH) {
+                let xIndex = Math.floor(x / this.rectW);
+                let yIndex = Math.floor(y / this.rectH); //Make sure rect is valid
+                if (xIndex >= 0 && xIndex < this.rects.length && yIndex >= 0 && yIndex < this.rects[xIndex].length) {
+                    objs = objs.concat(this.rects[xIndex][yIndex].contains);
+                }
+            }
+        }
+        return objs;
+    }
+
+    add(obj) {
+        let inX = Math.floor(obj.pos.x / this.rectW);
+        let inY = Math.floor(obj.pos.y / this.rectH);
+        this.rects[inX][inY].add(obj);
+    }
+
+    remove(obj) {
+        let inX = Math.floor(obj.pos.x / this.rectW);
+        let inY = Math.floor(obj.pos.y / this.rectH);
+        this.rects[inX][inY].remove(obj);
+    }
+}
+
 class Spawner extends Square {
     constructor(x, y, w) {
         super(x, y, w, Math.random() * Math.PI * 2);
@@ -269,7 +345,7 @@ class Mover extends Square {
 }
 
 class Player extends Circle {
-    constructor(name, x, y, s) {
+    constructor(name, x, y, s, canvasW, canvasH) {
         super(x, y, baseSize);
 
         this.name = name;
@@ -283,8 +359,28 @@ class Player extends Circle {
 
         this.lastShot = 0;
 
+        this.canvasW = canvasW;
+        this.canvasH = canvasH;
+
         this.speed = s;
         this.vel = new Vector(0, 0);
+    }
+
+    setCanvasSize(w, h) {
+        this.canvasW = w;
+        this.canvasH = h;
+    }
+
+    getVisualBounds() {
+        const scl = 1 + (this.r - baseSize) / (100 - baseSize); //map(player.r, baseSize, 100, 1, 2);
+        const sclW = this.canvasW * scl;
+        const sclH = this.canvasH * scl;
+        return new Rectangle(
+            this.pos.x - (sclW * 0.5),
+            this.pos.y - (sclH * 0.5),
+            sclW,
+            sclH
+        )
     }
 
     canShoot() {
@@ -341,7 +437,7 @@ class Dot extends Circle {
 class Game {
     constructor() {
         this.players = {};
-        this.dots = [];
+        this.dotsGrid = new Grid(0, 0, WIDTH, HEIGHT, 10, 10);
         this.movers = [];
         this.spawners = [];
         for (let i = 0; i < 10; i++) {
@@ -358,10 +454,13 @@ class Game {
 
     update() {
         for (let playerId in this.players) {
-            for (let i = this.dots.length - 1; i >= 0; i--) {
-                if (this.players[playerId].hitCircle(this.dots[i])) {
-                    this.players[playerId].eat(this.dots[i].nutrition);
-                    this.dots.splice(i, 1);
+            const player = this.players[playerId];
+            const closeDots = this.dotsGrid.getWithin(player.pos.x - player.r, player.pos.y - player.r, player.r * 2, player.r * 2);
+            for (let i = closeDots.length - 1; i >= 0; i--) {
+                if (player.hitCircle(closeDots[i])) {
+                    player.eat(closeDots[i].nutrition);
+                    this.dotsGrid.remove(closeDots[i]);
+                    // this.dots.splice(i, 1);
                 }
             }
         }
@@ -438,7 +537,7 @@ class Game {
     }
 
     spawnDot() {
-        this.dots.push(new Dot(Math.random() * WIDTH, Math.random() * HEIGHT));
+        this.dotsGrid.add(new Dot(Math.random() * WIDTH, Math.random() * HEIGHT));
     }
 
     findSpawnLocation() {
@@ -476,13 +575,9 @@ class Game {
 
     getGameData() {
         let data = {
-            'dots': [],
             'movers': [],
             'spawners': []
         };
-        for (let dot of this.dots) {
-            data.dots.push(dot.serialize());
-        }
         for (let mover of this.movers) {
             data.movers.push(mover.serialize());
         }
@@ -512,9 +607,9 @@ io.sockets.on('connection', socket => {
 
     io.to(socket.id).emit('connected');
 
-    socket.on('joinGame', name => {
+    socket.on('joinGame', data => {
         let spawn = game.findSpawnLocation();
-        game.players[socket.id] = new Player(name, spawn.x, spawn.y, 0.2);
+        game.players[socket.id] = new Player(data.name, spawn.x, spawn.y, 0.2, data.canvasW, data.canvasH);
 
         io.to(socket.id).emit('joined', {
             'dimX': WIDTH,
@@ -528,6 +623,9 @@ io.sockets.on('connection', socket => {
         });
     });
 
+    socket.on('canvasSize', data => {
+        game.players[socket.id].setCanvasSize(data.canvasW, data.canvasH);
+    });
     socket.on('pos', data => {
         if (game.players[socket.id]) {
             game.players[socket.id].setData(data);
@@ -546,12 +644,17 @@ io.sockets.on('connection', socket => {
 function sendData() {
     let gameData = game.getGameData();
     for (let socketId in game.players) {
+        const player = game.players[socketId];
+        const visualBounds = player.getVisualBounds();
+        let closeDots = game.dotsGrid.getWithin(visualBounds.pos.x - 5, visualBounds.pos.y - 5, visualBounds.w + 10, visualBounds.h + 10);
+        closeDots = closeDots.map(d => d.serialize());
+
         io.to(socketId).emit('gameData', {
             'timeSent': Date.now(),
             'you': {
                 'nutrition': game.players[socketId].nutrition,
             },
-            'dots': gameData.dots,
+            'dots': closeDots,
             'movers': gameData.movers,
             'spawners': gameData.spawners,
             'others': game.getPlayerData(socketId)

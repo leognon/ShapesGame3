@@ -44,9 +44,13 @@ new p5(() => {
         joinButton = select("#join");
         joinButton.mouseClicked(() => {
             if (state == LOBBY) {
-                socket.emit('joinGame', nameInp.value());
+                socket.emit('joinGame', {
+                    'name': nameInp.value(),
+                    'canvasW': width,
+                    'canvasH': height
+                });
             }
-        })
+        });
 
 
         socket = io({
@@ -256,6 +260,10 @@ new p5(() => {
         resizeCanvas(windowWidth, windowHeight);
         halfW = width * 0.5;
         halfH = height * 0.5;
+        socket.emit('canvasSize', {
+            'canvasW': width,
+            'canvasH': height
+        });
     }
 
     class Square {
