@@ -5,6 +5,10 @@ body {
     overflow: hidden;
 }
 
+canvas {
+    position: absolute;
+}
+
 #menu {
     display: none;
     z-index: 10;
