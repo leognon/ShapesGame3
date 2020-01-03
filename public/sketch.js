@@ -330,8 +330,9 @@ new p5(() => {
         }
 
         move(deltaTime) {
+            for (let dt = min(250, deltaTime); dt <= deltaTime; dt += 250) { //If the deltaTime is too big, it will do the collsiion in steps of 500ms
             const newVel = this.vel.copy();
-            newVel.setMag(this.speed * deltaTime);
+                newVel.setMag(this.speed * dt);
             this.pos.add(newVel);
             const corners = this.getCorners();
 
@@ -352,6 +353,7 @@ new p5(() => {
                 this.rot = Math.atan2(this.vel.y, this.vel.x);
             }
         }
+    }
     }
 
     class Circle {
