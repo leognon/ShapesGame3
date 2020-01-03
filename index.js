@@ -43,9 +43,14 @@ class Vector {
         return (new Vector(this.x, this.y));
     }
 
-    add(v) {
-        this.x += v.x;
-        this.y += v.y;
+    add(a, b) {
+        if (a instanceof Vector) {
+            this.x += a.x;
+            this.y += a.y;
+        } else {
+            this.x += a;
+            this.y += b;
+        }
         return this;
     }
 
@@ -268,7 +273,9 @@ class Spawner extends Square {
     spawn() {
         this.lastSpawn = Date.now();
         this.amtShot++;
-        return new Mover(this.pos.x, this.pos.y, this.w * 0.8, 0.2, this.rot);
+        const moverPos = this.pos.copy().add(this.w * Math.cos(this.rot) * 0.75, this.w * Math.sin(this.rot) * 0.75);
+
+        return new Mover(moverPos.x, moverPos.y, this.w * 0.8, 0.2, this.rot, 250);
     }
 
     update() {
@@ -289,7 +296,7 @@ class Spawner extends Square {
 }
 
 class Mover extends Square {
-    constructor(x, y, w, speed, dir, passiveFor = 200) {
+    constructor(x, y, w, speed, dir, passiveFor = 250) {
         super(x, y, w, dir);
         this.speed = speed;
         this.vel = new Vector(speed * Math.cos(dir), speed * Math.sin(dir));
@@ -475,7 +482,7 @@ class Game {
                         mover.pos.set(spawner.pos);
                         mover.rot = spawner.rot;
                         mover.vel = new Vector(mover.speed * Math.cos(mover.rot), mover.speed * Math.sin(mover.rot));
-                        mover.passiveFor = 200;
+                        mover.passiveFor = 400;
                         mover.spawnedAt = Date.now();
                     }
                 }
