@@ -247,7 +247,7 @@ class Spawner extends Square {
     constructor(x, y, w) {
         super(x, y, w, Math.random() * Math.PI * 2);
         this.lastSpawn = Date.now(); //It will wait a second before spawning
-        this.spawnEvery = (Math.random() * 3000) + 5000;
+        this.spawnEvery = (Math.random() * 3000) + 10000;
         this.amtShot = 0;
         this.rotSpeed = 0.001 * (Math.random() < 0.5 ? 1 : -1); //Rotates in a random dir
     }
@@ -256,9 +256,9 @@ class Spawner extends Square {
         this.pos.set(newPos);
         this.amtShot = 0;
         this.lastSpawn = Date.now();
-        this.spawnEvery = (Math.random() * 3000) + 5000;
+        this.spawnEvery = (Math.random() * 3000) + 10000;
         this.rotSpeed = 0.001 * (Math.random() < 0.5 ? 1 : -1); //Rotates in a random dir
-        this.w = 20 + (Math.random() * 20);
+        this.w = 30 + (Math.random() * 20);
     }
 
     shouldSpawn() {
@@ -440,9 +440,9 @@ class Game {
         this.dotsGrid = new Grid(0, 0, WIDTH, HEIGHT, 10, 10);
         this.movers = [];
         this.spawners = [];
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 6; i++) {
             let pos = this.findSpawnLocation();
-            this.spawners.push(new Spawner(pos.x, pos.y, 20 + (Math.random() * 20)));
+            this.spawners.push(new Spawner(pos.x, pos.y, 30 + (Math.random() * 20)));
         }
         for (let i = 0; i < 500; i++) {
             this.spawnDot();
@@ -625,7 +625,7 @@ io.sockets.on('connection', socket => {
     });
 
     socket.on('canvasSize', data => {
-        game.players[socket.id].setCanvasSize(data.canvasW, data.canvasH);
+        if (game.players[socket.id]) game.players[socket.id].setCanvasSize(data.canvasW, data.canvasH);
     });
     socket.on('pos', data => {
         if (game.players[socket.id]) {
