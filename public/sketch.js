@@ -252,7 +252,8 @@ new p5(() => {
 
     keyPressed = () => {
         if (state == INGAME && key == ' ') {
-            socket.emit('shoot');
+            const angle = createVector(mouseX - halfW, mouseY - halfH).heading();
+            socket.emit('shoot', angle);
         }
     }
 

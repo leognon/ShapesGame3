@@ -523,14 +523,15 @@ class Game {
         }
     }
 
-    shoot(playerId) {
+    shoot(playerId, dir) {
         const player = this.players[playerId];
         if (player.nutrition >= 12 && player.canShoot()) {
             const moverW = Math.pow(player.r, 0.8);
-            const moverVector = player.vel.copy().setMag(player.r + (moverW * 0.5) + 5); //The * 1.5 is because that includes the w/2 of the mover
+            const mag = player.r + (moverW * 0.5) + 5; //The * 1.5 is because that includes the w/2 of the mover
+            const moverVector = new Vector(mag * Math.cos(dir), mag * Math.sin(dir)); //player.vel.copy().setMag(player.r + (moverW * 0.5) + 5); 
             const moverPos = player.pos.copy().add(moverVector);
 
-            this.movers.push(new Mover(moverPos.x, moverPos.y, moverW, player.speed * 1.7, player.vel.heading(), 50));
+            this.movers.push(new Mover(moverPos.x, moverPos.y, moverW, player.speed * 1.7, dir, 50));
             player.eat(-nutritionPerShot);
             player.lastShot = Date.now();
         }
@@ -631,8 +632,8 @@ io.sockets.on('connection', socket => {
             game.players[socket.id].setData(data);
         }
     });
-    socket.on('shoot', () => {
-        game.shoot(socket.id);
+    socket.on('shoot', dir => {
+        game.shoot(socket.id, dir);
     });
 
     socket.on('disconnect', () => {
