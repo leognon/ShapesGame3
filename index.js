@@ -202,6 +202,7 @@ class GridRect extends Rectangle {
 class Grid {
     constructor(x, y, w, h, amtW, amtH) {
         this.rect = new Rectangle(x, y, w, h);
+        this.total = 0;
 
         this.rectW = WIDTH / amtW;
         this.rectH = HEIGHT / amtH;
@@ -236,15 +237,27 @@ class Grid {
     }
 
     add(obj) {
-        let inX = Math.floor(obj.pos.x / this.rectW);
-        let inY = Math.floor(obj.pos.y / this.rectH);
-        this.rects[inX][inY].add(obj);
+        let xIndex = Math.floor(obj.pos.x / this.rectW);
+        let yIndex = Math.floor(obj.pos.y / this.rectH);
+        if (xIndex >= 0 && xIndex < this.rects.length && yIndex >= 0 &&
+            yIndex < this.rects[xIndex].length) {
+            this.total++;
+            this.rects[xIndex][yIndex].add(obj);
+        } else {
+            console.log("Tried to add an object with an invalid position!");
+    }
     }
 
     remove(obj) {
-        let inX = Math.floor(obj.pos.x / this.rectW);
-        let inY = Math.floor(obj.pos.y / this.rectH);
-        this.rects[inX][inY].remove(obj);
+        let xIndex = Math.floor(obj.pos.x / this.rectW);
+        let yIndex = Math.floor(obj.pos.y / this.rectH);
+        if (xIndex >= 0 && xIndex < this.rects.length && yIndex >= 0 &&
+            yIndex < this.rects[xIndex].length) {
+            this.total--;
+            this.rects[xIndex][yIndex].remove(obj);
+        } else {
+            console.log("Tried to remove an object with an invalid position!");
+        }
     }
 }
 
@@ -444,7 +457,8 @@ class Dot extends Circle {
 class Game {
     constructor() {
         this.players = {};
-        this.dotsGrid = new Grid(0, 0, WIDTH, HEIGHT, 10, 10);
+        this.dotsGrid = new Grid(0, 0, WIDTH, HEIGHT, 20, 20);
+        this.maxDots = 1750;
         this.movers = [];
         this.spawners = [];
         for (let i = 0; i < 6; i++) {
@@ -456,7 +470,7 @@ class Game {
         }
 
         this.lastDotSpawn = 0;
-        this.spawnDotEvery = 300;
+        this.spawnDotEvery = 350;
     }
 
     update() {
@@ -524,7 +538,7 @@ class Game {
             }
         }
 
-        if (this.lastDotSpawn + this.spawnDotEvery < Date.now()) {
+        if (this.lastDotSpawn + this.spawnDotEvery < Date.now() && this.dotsGrid.total < this.maxDots) {
             this.spawnDot();
             this.lastDotSpawn = Date.now();
         }
