@@ -140,7 +140,7 @@ new p5(() => {
                         }
                     }
 
-                    player.updateVel();
+                    player.setVel(mouseX - halfW, mouseY - halfH);
                     player.move(deltaTime);
                     renderGame();
 
@@ -413,7 +413,7 @@ new p5(() => {
         showName(adjustedX = 0, adjustedY = 0) {
             fill(255);
             noStroke();
-            textSize(this.r);
+            textSize(this.r * 0.7);
             textAlign(CENTER);
             text(this.name, adjustedX, adjustedY - (5 + this.baseSize + (this.layers * this.layerWidth)));
         }
@@ -431,6 +431,7 @@ new p5(() => {
 
         setVel(x, y) {
             this.vel.set(x, y);
+            this.correctVel();
         }
 
         move(deltaTime) {
@@ -439,20 +440,22 @@ new p5(() => {
             this.pos.y = constrain(this.pos.y, this.r, gameDim.y - this.r);
         }
 
-        updateVel() {
-            this.vel = createVector(mouseX - halfW, mouseY - halfH);
+        correctVel() {
             if (this.vel.magSq() < 2250) { //The player moves slower if the mouse is near
                 this.vel.setMag(this.vel.mag() / 150 * this.speed);
             } else {
                 this.vel.setMag(this.speed);
             }
 
-
             let newPos = p5.Vector.add(this.pos, this.vel);
             newPos.x = constrain(newPos.x, this.r, gameDim.x - this.r);
             newPos.y = constrain(newPos.y, this.r, gameDim.y - this.r);
 
-            let otherObjects = gameData.others.concat(gameData.spawners);
+            let otherObjects = [...gameData.spawners];
+            for (let other of gameData.others) {
+                if (other !== this) otherObjects.push(other);
+            }
+            if (player !== this) otherObjects.push(player);
 
             let firstCollision = false;
             for (let other of otherObjects) {
@@ -487,7 +490,6 @@ new p5(() => {
                     }
                 }
             }
-            this.move();
         }
     }
 
