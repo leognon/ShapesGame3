@@ -89,7 +89,6 @@ new p5(() => {
     }
 
     function receivedData(d) {
-        const dTime = Date.now() - d.timeSent;
         gameData = {
             'dots': [],
             'movers': [],
@@ -101,18 +100,15 @@ new p5(() => {
         }
         for (let mover of d.movers) {
             let newMover = new Mover(mover.x, mover.y, mover.w, mover.velX, mover.velY);
-            newMover.move(dTime);
             gameData.movers.push(newMover);
         }
         for (let spawner of d.spawners) {
             let newS = new Spawner(spawner.x, spawner.y, spawner.w, spawner.rot, spawner.rotS, spawner.lastSpawn, spawner.spawnEvery);
-            newS.update(dTime);
             gameData.spawners.push(newS);
         }
         for (let other of d.others) {
             let newP = new Player(other.name, other.x, other.y, other.speed, other.nutrition, other.layerWidth);
             newP.setVel(other.velX, other.velY);
-            newP.move(dTime);
             gameData.others.push(newP);
         }
         justReceived = true;

@@ -651,7 +651,6 @@ function sendData() {
         closeDots = closeDots.map(d => d.serialize());
 
         io.to(socketId).emit('gameData', {
-            'timeSent': Date.now(),
             'you': {
                 'nutrition': game.players[socketId].nutrition,
             },
