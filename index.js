@@ -245,7 +245,7 @@ class Grid {
             this.rects[xIndex][yIndex].add(obj);
         } else {
             console.log("Tried to add an object with an invalid position!");
-    }
+        }
     }
 
     remove(obj) {
@@ -302,8 +302,8 @@ class Spawner extends Square {
             'w': this.w,
             'rot': this.rot,
             'rotS': this.rotSpeed,
-            'lastSpawn': this.lastSpawn,
-            'spawnEvery': this.spawnEvery
+            'nextSpawnIn': this.lastSpawn + this.spawnEvery - Date.now(), //How long until the next spawn
+            'lastSpawnWas': this.lastSpawn - Date.now() //How long since the last spawn
         }
     }
 }
@@ -481,7 +481,6 @@ class Game {
                 if (player.hitCircle(closeDots[i])) {
                     player.eat(closeDots[i].nutrition);
                     this.dotsGrid.remove(closeDots[i]);
-                    // this.dots.splice(i, 1);
                 }
             }
         }

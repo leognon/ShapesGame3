@@ -103,7 +103,7 @@ new p5(() => {
             gameData.movers.push(newMover);
         }
         for (let spawner of d.spawners) {
-            let newS = new Spawner(spawner.x, spawner.y, spawner.w, spawner.rot, spawner.rotS, spawner.lastSpawn, spawner.spawnEvery);
+            let newS = new Spawner(spawner.x, spawner.y, spawner.w, spawner.rot, spawner.rotS, spawner.nextSpawnIn, spawner.lastSpawnWas);
             gameData.spawners.push(newS);
         }
         for (let other of d.others) {
@@ -293,18 +293,18 @@ new p5(() => {
     }
 
     class Spawner extends Square {
-        constructor(x, y, w, rot, rotS, lastSpawn, spawnEvery) {
+        constructor(x, y, w, rot, rotS, nextSpawnIn, lastSpawnWas) {
             super(x, y, w, rot);
             this.rotSpeed = rotS;
-            this.lastSpawn = lastSpawn;
-            this.nextSpawn = lastSpawn + spawnEvery;
+            this.lastSpawn = Date.now() + lastSpawnWas;
+            this.nextSpawn = Date.now() + nextSpawnIn;
             this.ringSpacing = 15;
-            // this.spawnEvery = spawnEvery;
         }
 
         show(adjustedX, adjustedY) {
             super.show(adjustedX, adjustedY, () => {
-                const ringW = this.w * (Date.now() - this.lastSpawn) / (this.nextSpawn - this.lastSpawn);
+                //(-lastSpawnWas)) / (nextSpawnIn-lastSpawnWas))
+                const ringW = this.w * min((Date.now() - this.lastSpawn) / (this.nextSpawn - this.lastSpawn), 1);
                 rectMode(CENTER);
                 noFill();
                 stroke(0, 255, 0);
@@ -331,29 +331,29 @@ new p5(() => {
 
         move(deltaTime) {
             for (let dt = min(250, deltaTime); dt <= deltaTime; dt += 250) { //If the deltaTime is too big, it will do the collsiion in steps of 500ms
-            const newVel = this.vel.copy();
+                const newVel = this.vel.copy();
                 newVel.setMag(this.speed * dt);
-            this.pos.add(newVel);
-            const corners = this.getCorners();
+                this.pos.add(newVel);
+                const corners = this.getCorners();
 
-            let bounceX = false;
-            let bounceY = false;
+                let bounceX = false;
+                let bounceY = false;
 
-            for (let corner of corners) {
-                if (corner.x < 0 || corner.x > gameDim.x) bounceX = true;
-                if (corner.y < 0 || corner.y > gameDim.y) bounceY = true;
-            }
+                for (let corner of corners) {
+                    if (corner.x < 0 || corner.x > gameDim.x) bounceX = true;
+                    if (corner.y < 0 || corner.y > gameDim.y) bounceY = true;
+                }
 
-            if (bounceX) {
-                this.vel.x *= -1;
-                this.rot = Math.atan2(this.vel.y, this.vel.x);
-            }
-            if (bounceY) {
-                this.vel.y *= -1;
-                this.rot = Math.atan2(this.vel.y, this.vel.x);
+                if (bounceX) {
+                    this.vel.x *= -1;
+                    this.rot = Math.atan2(this.vel.y, this.vel.x);
+                }
+                if (bounceY) {
+                    this.vel.y *= -1;
+                    this.rot = Math.atan2(this.vel.y, this.vel.x);
+                }
             }
         }
-    }
     }
 
     class Circle {
